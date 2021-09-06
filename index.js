@@ -2,15 +2,14 @@ import express from 'express'
 import databaseConnect from './setup/database.js'
 import logger from './setup/logger.js'
 import cors from 'cors'
-import * as dotenv from 'dotenv'
+
 import publicApi from './routes/public.js'
 import privateApi from './routes/api.js'
+
 const app = express()
 const port = process.env.PORT || 3000
 
-if (dotenv.error) { logger.error('--error occurred while setting env files'); }
-dotenv.config();
-databaseConnect(process.env.DB_URL);
+databaseConnect();
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(cors());

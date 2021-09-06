@@ -1,9 +1,10 @@
 import logger from './logger.js'
 import mongoose from 'mongoose'
+import {dbUrl} from '../utils/environment.js'
 
-const databaseConnect = async (connectionString) => {
+const databaseConnect = async () => {
     try {
-        await mongoose.connect(connectionString,{ useNewUrlParser: true, useUnifiedTopology: true });
+        await mongoose.connect(dbUrl,{ useNewUrlParser: true, useUnifiedTopology: true });
         logger.info('--database connected');
     }
     catch (err) { logger.error('--error! database not connected ',err) }
