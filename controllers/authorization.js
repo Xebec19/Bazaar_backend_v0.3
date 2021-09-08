@@ -1,8 +1,20 @@
 import bcrypt from 'bcryptjs'
 import jsonwt from 'jsonwebtoken'
-
+import databaseConnect from '../setup/database.js'
 import logger from '../setup/logger.js'
 import { jwtSecret } from '../utils/environment.js'
+import BazaarUser from '../models/bazaarUsers.js'
+
+const checkUser = (email) => {
+    return BazaarUser.findOne({email});
+}
+
+const getToken = (payload) => {
+    const token = jsonwt.sign({
+        payload
+    }, jwtSecret, { expiresIn: '1h' });
+    return token;
+}
 
 /**
  * @route /public/register
@@ -11,6 +23,17 @@ import { jwtSecret } from '../utils/environment.js'
  */
 export const register = async (req, res) => {
     let { name, email, password, phoneNumber } = req.body;
+    let token;
+    try{
+    const checkUser = await BazaarUser.findOne({email});
+    if(checkUser)
+    throw new Error('User already exists');
+    }
+    catch(error){
+        logger.error(error.message);
+        res.status(401).json({ message: "User already exists", data: false }).end();
+        return;
+    }
     try {
         bcrypt.genSalt(10, function (err, salt) {
             bcrypt.hash(password, salt, function (err, hash) {
@@ -23,24 +46,53 @@ export const register = async (req, res) => {
     catch (error) {
         logger.error(error.message);
         res.status(401).json({ message: "--error occurred while hashing password", data: false }).end();
+        return;
     }
     const payload = { email };
     try {
         if (!jwtSecret) throw new Error('Secret is not defined');
-        const token = jsonwt.sign({
-            data: 'foobar'
-        }, 'secret', { expiresIn: '1h' });
+        token = jsonwt.sign({
+            payload
+        }, jwtSecret, { expiresIn: '1h' });
         ;
         if (!token) throw new Error('Token not generated');
-        res.status(201).json({ message: 'user registered successfully', status: true, token: 'Bearer' + token }).end();
     }
     catch (error) {
         logger.error(error);
         res.status(401).json({ message: "--error occurred while generating token", status: false, token: false }).end();
+        return;
+    }
+    try{
+        const NewUser = new BazaarUser({
+            name,
+            email,
+            password,
+            phoneNumber
+        });
+        await NewUser.save();
+        logger.info('--success user created : ',email);
+        res.status(201).json({ message: 'user registered successfully', status: true, token: 'Bearer ' + token }).end();
+        return;
+    }
+    catch(error){
+        logger.error(error);
+        res.status(401).json({ message: "--error occurred while saving user", status: false, token: false }).end();
+        return;
     }
 }
 
 export const logIn = async (req, res) => {
     const { email, password } = req.body;
+    try{
+        const checkUser = checkUser(email);
+        if(!checkUser) throw new Error('Email not found');
+        const token = getToken({email});
+        if(!token) throw new Error('Token not generated');
+    }
+    catch(error){
+        logger.error(error);
+        res.status(401).json({ message: "--error occurred while logging in", status: false, token: false }).end();
+        return;
+    }
     res.status(201).json({ message: 'Well done' }).end();
 }

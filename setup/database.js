@@ -5,7 +5,7 @@ import {dbUrl} from '../utils/environment.js'
 const databaseConnect = async () => {
     try {
         await mongoose.connect(dbUrl,{ useNewUrlParser: true, useUnifiedTopology: true });
-        logger.info('--database connected');
+        logger.info(`--database connected at ${dbUrl}`);
     }
     catch (err) { logger.error('--error! database not connected ',err) }
 }
