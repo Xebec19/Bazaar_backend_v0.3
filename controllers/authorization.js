@@ -24,6 +24,7 @@ const getToken = (payload) => {
 export const register = async (req, res) => {
     let { name, email, password, phoneNumber } = req.body;
     let token;
+    let hashPassword
     try{
     const checkUser = await BazaarUser.findOne({email});
     if(checkUser)
@@ -35,13 +36,8 @@ export const register = async (req, res) => {
         return;
     }
     try {
-        bcrypt.genSalt(10, function (err, salt) {
-            bcrypt.hash(password, salt, function (err, hash) {
-                if (err) throw new Error(err);
-                if (!hash) throw new Error(err);
-                password = hash;
-            });
-        });
+            hashPassword = await bcrypt.hash(password, 8)
+            if(!hashPassword) throw new Error('--password not hashed');
     }
     catch (error) {
         logger.error(error.message);
@@ -62,15 +58,16 @@ export const register = async (req, res) => {
         res.status(401).json({ message: "--error occurred while generating token", status: false, token: false }).end();
         return;
     }
+    const data = {
+        name: name,
+        email: email,
+        password: hashPassword,
+        phoneNumber:phoneNumber
+    }
     try{
-        const NewUser = new BazaarUser({
-            name,
-            email,
-            password,
-            phoneNumber
-        });
+        const NewUser = new BazaarUser(data);
         await NewUser.save();
-        logger.info('--success user created : ',email);
+        logger.info(`--success user created : ${email}`);
         res.status(201).json({ message: 'user registered successfully', status: true, token: 'Bearer ' + token }).end();
         return;
     }
@@ -90,12 +87,12 @@ export const logIn = async (req, res) => {
     const { email, password } = req.body;
     try{
         const checkUser = await findUser(email);
-        if(!checkUser) throw new Error('Email not found');
+        if(!checkUser.email) throw new Error('Email not found');
         const checkPassword = await bcrypt.compare(password, checkUser.password);
         if(!checkPassword) throw new Error('Incorrect password');
-        const token = getToken({email});
+        const token = getToken({email:checkUser.email});
         if(!token) throw new Error('Token not generated');
-        logger.info('--success user logged in : ',email);
+        logger.info(`--success user logged in : ${checkUser.email}`);
         res.status(201).json({ message: 'user logged in successfully', status: true, token: 'Bearer ' + token }).end();
         return;
     }
