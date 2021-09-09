@@ -5,8 +5,8 @@ import logger from '../setup/logger.js'
 import { jwtSecret } from '../utils/environment.js'
 import BazaarUser from '../models/bazaarUsers.js'
 
-const checkUser = (email) => {
-    return BazaarUser.findOne({email});
+const findUser = async (email) => {
+    return await BazaarUser.findOne({email});
 }
 
 const getToken = (payload) => {
@@ -81,18 +81,27 @@ export const register = async (req, res) => {
     }
 }
 
+/**
+ * @route /public/login
+ * @param {email,password} req 
+ * @param {token} res 
+ */
 export const logIn = async (req, res) => {
     const { email, password } = req.body;
     try{
-        const checkUser = checkUser(email);
+        const checkUser = await findUser(email);
         if(!checkUser) throw new Error('Email not found');
+        const checkPassword = await bcrypt.compare(password, checkUser.password);
+        if(!checkPassword) throw new Error('Incorrect password');
         const token = getToken({email});
         if(!token) throw new Error('Token not generated');
+        logger.info('--success user logged in : ',email);
+        res.status(201).json({ message: 'user logged in successfully', status: true, token: 'Bearer ' + token }).end();
+        return;
     }
     catch(error){
-        logger.error(error);
+        logger.error(error.message);
         res.status(401).json({ message: "--error occurred while logging in", status: false, token: false }).end();
         return;
     }
-    res.status(201).json({ message: 'Well done' }).end();
 }
