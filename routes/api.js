@@ -1,8 +1,7 @@
 import express from 'express'
-import {register} from '../controllers/authorization.js'
-
+import { addToCart } from '../controllers/cart.js';
 const router = express.Router();
 
-router.get('/register',(req,res) =>  register(req,res));
+router.get('/add_to_cart',(req,res) =>  addToCart(req,res));
 
 export default router;

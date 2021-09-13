@@ -1,6 +1,5 @@
 import bcrypt from 'bcryptjs'
 import jsonwt from 'jsonwebtoken'
-import databaseConnect from '../setup/database.js'
 import logger from '../setup/logger.js'
 import { jwtSecret } from '../utils/environment.js'
 import BazaarUser from '../models/bazaarUsers.js'
@@ -87,7 +86,7 @@ export const logIn = async (req, res) => {
     const { email, password } = req.body;
     try{
         const checkUser = await findUser(email);
-        if(!checkUser.email) throw new Error('Email not found');
+        if(!checkUser) throw new Error('Email not found');
         const checkPassword = await bcrypt.compare(password, checkUser.password);
         if(!checkPassword) throw new Error('Incorrect password');
         const token = getToken({email:checkUser.email});
@@ -98,7 +97,7 @@ export const logIn = async (req, res) => {
     }
     catch(error){
         logger.error(error.message);
-        res.status(401).json({ message: "--error occurred while logging in", status: false, token: false }).end();
+        res.status(401).json({ message: error.message, status: false, token: false }).end();
         return;
     }
 }
