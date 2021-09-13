@@ -43,20 +43,6 @@ export const register = async (req, res) => {
         res.status(401).json({ message: "--error occurred while hashing password", data: false }).end();
         return;
     }
-    const payload = { email };
-    try {
-        if (!jwtSecret) throw new Error('Secret is not defined');
-        token = jsonwt.sign({
-            payload
-        }, jwtSecret, { expiresIn: '1h' });
-        ;
-        if (!token) throw new Error('Token not generated');
-    }
-    catch (error) {
-        logger.error(error);
-        res.status(401).json({ message: "--error occurred while generating token", status: false, token: false }).end();
-        return;
-    }
     const data = {
         name: name,
         email: email,
@@ -65,7 +51,10 @@ export const register = async (req, res) => {
     }
     try{
         const NewUser = new BazaarUser(data);
-        await NewUser.save();
+        const user = await NewUser.save();
+        const payload = user._id;
+        token = getToken(payload);
+        if(!token) throw new Error('--error token not generated')
         logger.info(`--success user created : ${email}`);
         res.status(201).json({ message: 'user registered successfully', status: true, token: 'Bearer ' + token }).end();
         return;
@@ -89,7 +78,7 @@ export const logIn = async (req, res) => {
         if(!checkUser) throw new Error('Email not found');
         const checkPassword = await bcrypt.compare(password, checkUser.password);
         if(!checkPassword) throw new Error('Incorrect password');
-        const token = getToken({email:checkUser.email});
+        const token = getToken({id:checkUser._id});
         if(!token) throw new Error('Token not generated');
         logger.info(`--success user logged in : ${checkUser.email}`);
         res.status(201).json({ message: 'user logged in successfully', status: true, token: 'Bearer ' + token }).end();

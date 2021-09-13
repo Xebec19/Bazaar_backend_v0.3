@@ -8,11 +8,14 @@ var opts = {};
 opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken('JWT');
 opts.secretOrKey = jwtSecret;
 
-passport.use(new Strategy(opts, (jwt_payload, done) => {
+passport.use(new Strategy(opts, async (jwt_payload, done) => {
     try {
-        const user = BazaarUser.findById(jwt_payload.payload.id);
-        if (user.hasOwnProperty(email)) return done(null, user);
-        else throw new Error('No user found');
+        const user = await BazaarUser.findById(jwt_payload.payload.id);
+        if (user) return done(null, user);
+        else {
+            logger.info(user);
+            throw new Error('No user found');
+        }
     }
     catch (error) {
         logger.error(error.message);
