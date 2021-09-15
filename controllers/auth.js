@@ -11,8 +11,23 @@ const findUser = async (email) => {
 const getToken = (payload) => {
     const token = jsonwt.sign({
         payload
-    }, jwtSecret, { expiresIn: '1h' });
+    }, jwtSecret, { expiresIn: '5d' });
     return token;
+}
+
+const saveToken = async(id,token) => {
+    try{
+    const user = await BazaarUser.findById(id);
+    user.token.push(token);
+    let saveUser = new BazaarUser(user);
+    const status = await saveUser.save();
+    if(!status) throw '--error token not saved'
+    return true;
+    }
+    catch(error){
+        logger.error(error.message);
+        return false;
+    }
 }
 
 /**
@@ -55,6 +70,8 @@ export const register = async (req, res) => {
         const payload = user._id;
         token = getToken(payload);
         if(!token) throw new Error('--error token not generated')
+        const tokenStatus = await saveToken(user._id,token);
+        if(!tokenStatus) throw new Error('--error occurred while saving token');
         logger.info(`--success user created : ${email}`);
         res.status(201).json({ message: 'user registered successfully', status: true, token: 'Bearer ' + token }).end();
         return;
@@ -80,6 +97,8 @@ export const logIn = async (req, res) => {
         if(!checkPassword) throw new Error('Incorrect password');
         const token = getToken({id:checkUser._id});
         if(!token) throw new Error('Token not generated');
+        const tokenStatus = await saveToken(checkUser._id,token);
+        if(!tokenStatus) throw new Error('Error occurred while saving token');
         logger.info(`--success user logged in : ${checkUser.email}`);
         res.status(201).json({ message: 'user logged in successfully', status: true, token: 'Bearer ' + token }).end();
         return;

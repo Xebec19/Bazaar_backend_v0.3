@@ -2,7 +2,7 @@ import logger from "../setup/logger.js"
 import BazaarProduct from "../models/bazaarProducts.js"
 import BazaarCategories from "../models/bazzarCategories.js";
 const dbp = BazaarProduct;
-const dbc = BazaarCategory;
+const dbc = BazaarCategories;
 
 /**
  * @route it fetches a list of products
@@ -18,7 +18,6 @@ const fetchProducts = async (limit = 0, filter = {}) => {
     return dbp.find(filter).limit(+limit);
 }
 
-// Todo fetch categories from right table
 const fetchCategories = async () => {
     return dbc.find({},{CategoryName:1,_id:0});
 }

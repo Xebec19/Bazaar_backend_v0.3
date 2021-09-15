@@ -14,9 +14,27 @@ const BazaarUserSchema = new mongoose.Schema({
 		type: String,
 		required: true
 	},
-    phoneNumber: {
-        type: Number,
-    },
+	phoneNumber: {
+		type: Number,
+	},
+	token: [String],
+	cart: [{
+		productId: {
+			type: mongoose.Schema.Types.ObjectId,
+			required: true,
+			ref: "bazaarproducts"
+		},
+		quantity: {
+			type: Number
+		},
+		price: {
+			type: Number
+		}
+	}],
+	total: {
+		type: Number,
+		default: 0
+	},
 	date: {
 		type: Date,
 		default: Date.now
@@ -24,5 +42,5 @@ const BazaarUserSchema = new mongoose.Schema({
 });
 
 
-const BazaarUser = mongoose.model("BazaarUsers",BazaarUserSchema);
+const BazaarUser = mongoose.model("BazaarUsers", BazaarUserSchema);
 export default BazaarUser;
