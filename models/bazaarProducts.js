@@ -1,32 +1,36 @@
 import mongoose from 'mongoose'
 
 const BazaarProductSchema = new mongoose.Schema({
-	name: {
+	ProductName: {
 		type: String,
 		required: true
 	},
-	email: {
-		type: String,
-		required: true,
-		unique: true
+	price: {
+		type: Number,
+		required: true
 	},
-	password: {
+	Gender: {
+		type: String,
+		required: false
+	},
+	Size: {
+		type: String,
+		required: true
+	},
+	Category: {
+		type: String,
+		required: true
+	},
+	Color: {
 		type: String,
 		required: true
 	},
 	quantity: {
 		type: Number,
 		required: true
-	},
-    phoneNumber: {
-        type: Number,
-    },
-	date: {
-		type: Date,
-		default: Date.now
 	}
 });
 
 
-const BazaarProduct = mongoose.model("BazaarProduct",BazaarProductSchema);
+const BazaarProduct = mongoose.model("BazaarProduct", BazaarProductSchema);
 export default BazaarProduct;
