@@ -8,10 +8,13 @@ const dbu = BazaarUser;
 export const calcTotal = async (id) => {
     try{
         const user = await findUserById(id);
-        const total = user.cart.reduce((acc,el) => {
-            return acc += (el.quantity * el.price) 
-        },0);
-        return total;
+        if(user.total){
+            const total = user.cart.reduce((acc,el) => {
+                return acc += (el.quantity * el.price) 
+            },0);
+            return total;
+        }
+        else return user.total;
     }
     catch(error){
         logger.error(error.message);
