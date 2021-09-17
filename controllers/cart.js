@@ -21,7 +21,7 @@ export const addToCart = async (req, res) => {
         if (!user) throw new Error('no user found');
         const product = await findProductById(productId);
         if (!product) throw new Error('no product found');
-        if (!product.quantity < qty) throw new Error('out of stock');
+        if (product.quantity < qty) throw new Error('out of stock');
         if (!product.price) throw new Error('Price can not be null');
         user.cart.push({ productId: product._id, quantity: qty, price: product.price });
         await dbu.updateOne({ _id: user._id }, { $set: { cart: user.cart } });
@@ -35,6 +35,30 @@ export const addToCart = async (req, res) => {
     }
     catch (error) {
         logger.error(error.message);
+        res.status(401).json({ message: error.message, status: false, data: false }).end();
+        return;
+    }
+}
+/**
+ * @route /api/read_cart
+ * @param {} req 
+ * @param {cart:[{}],total:number} res 
+ * @type GET
+ * @returns user's cart and total
+ */
+export const readCart = async(req,res) => {
+    const {userId} = req.body;
+    try{
+        let token = req.headers['authorization'];
+        const user = await findUserByToken(token);
+        if(!user) throw new Error('no user found');
+        const total = calcTotal(user._id);
+        if(!(total >= 0)) throw new Error('invalid total');
+        res.status(201).json({ message: 'Cart fetched', status: true, data: {cart: user.cart, total: total} }).end();
+        return;
+    }
+    catch(error){
+        logger.info(error.message);
         res.status(401).json({ message: error.message, status: false, data: false }).end();
         return;
     }
