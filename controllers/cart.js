@@ -52,7 +52,7 @@ export const readCart = async(req,res) => {
         let token = req.headers['authorization'];
         const user = await findUserByToken(token);
         if(!user) throw new Error('no user found');
-        const total = calcTotal(user._id);
+        const total = await calcTotal(user._id);
         if(!(total >= 0)) throw new Error('invalid total');
         res.status(201).json({ message: 'Cart fetched', status: true, data: {cart: user.cart, total: total} }).end();
         return;
